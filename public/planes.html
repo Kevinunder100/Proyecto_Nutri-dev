@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Planes de Alimentación - NutriChef</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .plans-hero {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 40px;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 20px;
+        }
+
+        .plan-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .plan-price {
+            font-size: 2.5em;
+            color: #2E7D32;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .plan-features li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .plan-features li::before {
+            content: "✓";
+            color: #4CAF50;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <div class="container">
+            <div class="nav-logo">
+                <img src="img/logo.png">
+                <span>Nutri</span>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html">Inicio</a>
+                <a href="menu.html">Recetas</a>
+                <a href="planes.html" class="active">Planes</a>
+                <a href="recursos.html">Recursos</a>
+            </nav>
+            <div class="nav-actions">
+                <!-- Auth handled by auth.js -->
+            </div>
+        </div>
+    </header>
+
+    <div class="plans-hero">
+        <div class="container">
+            <h1>Planes de Alimentación Semanal</h1>
+            <p>Organiza tus comidas, ahorra tiempo y come saludable sin estrés.</p>
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="plans-grid">
+            <!-- Plan Básico -->
+            <div class="plan-card">
+                <h3>Plan Básico</h3>
+                <div class="plan-price">Gratis</div>
+                <p>Ideal para empezar a organizar tu semana.</p>
+                <ul class="plan-features">
+                    <li>Acceso a todas las recetas</li>
+                    <li>Búsqueda avanzada por ingredientes</li>
+                    <li>Calculadora de porciones</li>
+                </ul>
+                <button class="btn btn-outline">Tu plan actual</button>
+            </div>
+
+            <!-- Plan Premium -->
+            <div class="plan-card" style="border: 2px solid #4CAF50; position: relative;">
+                <div
+                    style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #4CAF50; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: bold;">
+                    RECOMENDADO</div>
+                <h3>Plan Premium</h3>
+                <div class="plan-price">$99<span style="font-size: 0.4em; color: #666;">/mes</span></div>
+                <p>Lleva tu nutrición al siguiente nivel.</p>
+                <ul class="plan-features">
+                    <li>Todo lo del plan Básico</li>
+                    <li>Menús semanales automáticos</li>
+                    <li>Lista de compras inteligente</li>
+                    <li>Soporte nutricional por chat</li>
+                </ul>
+                <button class="btn btn-primary">Próximamente</button>
+            </div>
+
+            <!-- Plan Familiar -->
+            <div class="plan-card">
+                <h3>Plan Familiar</h3>
+                <div class="plan-price">$149<span style="font-size: 0.4em; color: #666;">/mes</span></div>
+                <p>Soluciones para toda la familia.</p>
+                <ul class="plan-features">
+                    <li>Perfiles para cada miembro</li>
+                    <li>Adaptación para niños y adultos</li>
+                    <li>Recetas exclusivas para fiestas</li>
+                </ul>
+                <button class="btn btn-outline">Próximamente</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/auth.js"></script>
+</body>
+
+</html>

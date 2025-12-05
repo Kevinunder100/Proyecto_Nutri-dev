@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Crear Cuenta - NutriChef</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+  <header class="navbar">
+    <div class="container">
+      <div class="nav-logo">
+        <img src="img/logo.png">
+        <span>Nutri</span>
+      </div>
+
+      <nav class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="menu.html">Recetas</a>
+        <a href="planes.html">Planes</a>
+        <a href="recursos.html">Recursos</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="login.html" class="btn btn-outline">Ingresar</a>
+        <a href="registrar.html" class="btn btn-primary">Crear cuenta</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="form-page">
+    <div class="container form-card-wrapper">
+      <div class="form-card">
+        <h1>Crea una Cuenta</h1>
+        <p>Empieza a descubrir recetas personalizadas para ti.</p>
+
+        <form>
+          <div class="form-group">
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" placeholder="Tu nombre" />
+          </div>
+
+          <div class="form-group">
+            <label for="correo">Correo electrónico</label>
+            <input type="email" id="correo" placeholder="tucorreo@ejemplo.com" />
+          </div>
+
+          <div class="form-group">
+            <label for="pass1">Contraseña</label>
+            <input type="password" id="pass1" placeholder="********" />
+          </div>
+
+          <div class="form-group">
+            <label for="pass2">Confirmar contraseña</label>
+            <input type="password" id="pass2" placeholder="********" />
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">Registrarse</button>
+        </form>
+
+        <small>
+          ¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a>.
+        </small>
+      </div>
+    </div>
+  </main>
+  <script>
+    const registerForm = document.querySelector('form');
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('nombre').value;
+      const email = document.getElementById('correo').value;
+      const password = document.getElementById('pass1').value;
+      const confirmPassword = document.getElementById('pass2').value;
+
+      if (password !== confirmPassword) {
+        alert("Passwords do not match");
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert('Registration successful! Please login.');
+          window.location.href = '/login.html';
+        } else {
+          alert(data.error || 'Registration failed');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred');
+      }
+    });
+  </script>
+</body>
+
+</html>
