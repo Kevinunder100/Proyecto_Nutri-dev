@@ -33,12 +33,14 @@
   <main class="search-page">
     <div class="container">
       <div class="search-card">
-        <h1 class="search-title">¿QUÉ TIENES EN CASA?</h1>
+        <h1 class="search-title">¿Qué tienes en casa? 🏡</h1>
 
         <div class="search-row">
           <div>
             <label for="buscar">Busca un platillo o ingrediente</label>
-            <input id="buscar" type="text" placeholder="Ej. pollo, pasta, ensalada..." />
+            <div class="search-input-wrapper">
+              <input id="buscar" type="text" placeholder="Ej. pollo, pasta, ensalada..." />
+            </div>
           </div>
 
           <div>
@@ -54,29 +56,33 @@
 
           <div>
             <label>Elige los ingredientes que tienes disponibles</label>
-            <div class="check-group"
-              style="max-height: 200px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
+            <div class="check-group">
               <!-- Cargado dinámicamente -->
             </div>
           </div>
 
-          <div class="search-tags">
-            Tus ingredientes seleccionados:
+          <div>
+            <label>Tus ingredientes seleccionados:</label>
+            <div class="search-tags"></div>
           </div>
 
           <div class="search-actions">
-            <button class="btn btn-outline" id="clear-filters-btn" type="button" style="margin-right: 10px;">Limpiar
-              filtros</button>
+            <button class="btn btn-outline" id="clear-filters-btn" type="button">Limpiar filtros</button>
             <button class="btn btn-success" id="search-btn">Buscar recetas</button>
           </div>
         </div>
       </div>
+
+      <!-- Resultados -->
+      <section id="results-container" class="recipes-grid">
+        <!-- Las tarjetas se llenan dinámicamente -->
+      </section>
     </div>
   </main>
   <script>
     const searchInput = document.getElementById('buscar');
     const searchButton = document.getElementById('search-btn');
-    const resultsContainer = document.querySelector('.results-grid') || createResultsContainer();
+    const resultsContainer = document.getElementById('results-container');
     const categoryButtons = document.querySelectorAll('.tag-filters button');
     const checkGroup = document.querySelector('.check-group');
     const selectedTagsContainer = document.querySelector('.search-tags');
@@ -124,24 +130,32 @@
     }
 
     function updateSelectedTags() {
-      selectedTagsContainer.innerHTML = 'Tus ingredientes seleccionados:';
+      selectedTagsContainer.innerHTML = '';
+      if (selectedIngredients.length === 0) {
+        selectedTagsContainer.innerHTML = '<span style="color: #999; font-style: italic;">No has seleccionado ingredientes.</span>';
+        return;
+      }
+
       selectedIngredients.forEach(ing => {
-        const span = document.createElement('span');
-        span.textContent = ing;
-        span.style.cssText = "background: #e0e0e0; padding: 4px 10px; border-radius: 16px; margin: 2px; display: inline-block; font-size: 0.9em;";
-        selectedTagsContainer.appendChild(span);
+        const chip = document.createElement('span');
+        chip.className = 'ingredient-chip';
+        chip.innerHTML = `${ing} <span class="close-btn" data-ing="${ing}">×</span>`;
+        selectedTagsContainer.appendChild(chip);
+
+        // Add click event to remove chip
+        chip.querySelector('.close-btn').addEventListener('click', (e) => {
+          const ingToRemove = e.target.getAttribute('data-ing');
+          removeIngredient(ingToRemove);
+        });
       });
     }
 
-    function createResultsContainer() {
-      const container = document.createElement('div');
-      container.className = 'results-grid';
-      container.style.display = 'grid';
-      container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(250px, 1fr))';
-      container.style.gap = '20px';
-      container.style.padding = '20px';
-      document.querySelector('main').appendChild(container);
-      return container;
+    function removeIngredient(ing) {
+      selectedIngredients = selectedIngredients.filter(i => i !== ing);
+      // Uncheck the checkbox
+      const checkbox = Array.from(document.querySelectorAll('.check-group input')).find(cb => cb.value === ing);
+      if (checkbox) checkbox.checked = false;
+      updateSelectedTags();
     }
 
     async function searchRecipes() {
@@ -180,23 +194,41 @@
       resultsContainer.innerHTML = '';
 
       if (recipes.length === 0) {
-        resultsContainer.innerHTML = '<p>No se encontraron recetas.</p>';
+        resultsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666;">No se encontraron recetas que coincidan con tu búsqueda.</p>';
         return;
       }
 
       recipes.forEach(recipe => {
-        const card = document.createElement('div');
+        const card = document.createElement('article');
         card.className = 'recipe-card';
-        card.style.border = '1px solid #ddd';
-        card.style.borderRadius = '8px';
-        card.style.padding = '15px';
-        card.style.backgroundColor = 'white';
 
-        card.innerHTML = `
-            <h3>${recipe.name}</h3>
-            <p>Categoría: ${recipe.category || 'General'}</p>
-            <a href="/receta.html?slug=${recipe.slug}" style="display: inline-block; margin-top: 10px; padding: 5px 10px; background: #4CAF50; color: white; text-decoration: none; border-radius: 4px;">Ver Receta</a>
-          `;
+        const title = document.createElement("h3");
+        title.textContent = recipe.name;
+
+        const meta = document.createElement("p");
+        meta.className = "recipe-card-meta";
+        meta.textContent = recipe.category || "Sin categoría";
+
+        const servings = document.createElement("p");
+        servings.className = "recipe-card-servings";
+        if (recipe.servings && (recipe.servings.children || recipe.servings.adults)) {
+          servings.textContent =
+            (recipe.servings.children ? recipe.servings.children + " niño(s)" : "") +
+            (recipe.servings.children && recipe.servings.adults ? " · " : "") +
+            (recipe.servings.adults ? recipe.servings.adults + " adulto(s)" : "");
+        } else {
+          servings.textContent = "Porciones no especificadas";
+        }
+
+        const button = document.createElement("a");
+        button.className = "btn btn-small";
+        button.textContent = "Ver receta";
+        button.href = "receta.html?slug=" + encodeURIComponent(recipe.slug);
+
+        card.appendChild(title);
+        card.appendChild(meta);
+        card.appendChild(servings);
+        card.appendChild(button);
 
         resultsContainer.appendChild(card);
       });

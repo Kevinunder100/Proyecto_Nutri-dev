@@ -31,9 +31,8 @@
 
   <main class="recipe-page">
     <div class="container">
-      <a href="#" class="back-button" onclick="goBack(event)">
-        ← Volver
-      </a>
+      <a href="#" class="back-button" onclick="goBack(event)">← Volver</a>
+
       <div class="recipe-header" style="display: flex; justify-content: space-between; align-items: center;">
         <!-- Título dinámico -->
         <h1 id="recipe-title" style="margin: 0;">Cargando receta...</h1>
@@ -107,10 +106,11 @@
   </main>
 
   <script>
-    let currentPortionType = "children"; // "children" (niño) o "adults" (adulto)
-    let currentPortionCount = 1;        // número de porciones
+    let currentPortionType = "children";
+    let currentPortionCount = 1;
     let currentRecipe = null;
 
+    // ... (Helper functions remain same: parseNumber, getBaseQuantity) ...
     function parseNumber(value) {
       if (value === null || value === undefined || value === "") return null;
       if (typeof value === "number") return value;
@@ -119,37 +119,14 @@
     }
 
     function getBaseQuantity(ing, portionType) {
-      const raw =
-        portionType === "children"
-          ? ing.quantity_children
-          : ing.quantity_adults;
-
+      const raw = portionType === "children" ? ing.quantity_children : ing.quantity_adults;
       return parseNumber(raw);
     }
 
     function updateServingsText(recipe) {
       const servingsText = document.getElementById("servings-text");
       const typeLabel = currentPortionType === "children" ? "niño" : "adulto";
-
-      let baseInfo = "";
-      if (recipe.servings && (recipe.servings.children || recipe.servings.adults)) {
-        baseInfo =
-          "Porciones sugeridas en la receta: " +
-          (recipe.servings.children ? recipe.servings.children + " niño(s)" : "") +
-          (recipe.servings.children && recipe.servings.adults ? " · " : "") +
-          (recipe.servings.adults ? recipe.servings.adults + " adulto(s)" : "");
-      }
-
-      const dynamicInfo =
-        "Mostrando cantidades para " +
-        currentPortionCount +
-        " porción(es) de " +
-        typeLabel +
-        ".";
-
-      servingsText.textContent = baseInfo
-        ? baseInfo + " | " + dynamicInfo
-        : dynamicInfo;
+      servingsText.textContent = `Calculado para ${currentPortionCount} porción(es) de ${typeLabel}.`;
     }
 
     function renderIngredients() {
@@ -165,15 +142,12 @@
         let textAmount = "";
         if (base !== null) {
           const total = base * currentPortionCount;
-          // Si quieres redondear:
           const display = Number.isInteger(total) ? total : total.toFixed(2);
-          textAmount = display + unit;
+          textAmount = display + " " + unit;
         }
 
         const li = document.createElement("li");
-        li.textContent =
-          ing.name + (textAmount ? " — " + textAmount : "");
-
+        li.textContent = ing.name + (textAmount ? " (" + textAmount + ")" : "");
         ingList.appendChild(li);
       });
 
@@ -185,7 +159,7 @@
       const countSelect = document.getElementById("portion-count");
 
       typeSelect.addEventListener("change", () => {
-        currentPortionType = typeSelect.value; // "children" o "adults"
+        currentPortionType = typeSelect.value;
         renderIngredients();
       });
 
@@ -201,57 +175,47 @@
         const slug = params.get("slug");
 
         if (!slug) {
-          console.error("No slug provided in URL (e.g. ?slug=bistec-de-res-asado)");
           document.getElementById("recipe-title").textContent = "Receta no encontrada";
           return;
         }
 
         const res = await fetch("/api/recipes/" + encodeURIComponent(slug));
-        if (!res.ok) {
-          console.error("Error fetching recipe:", res.status);
-          document.getElementById("recipe-title").textContent = "Receta no encontrada";
-          return;
-        }
+        if (!res.ok) throw new Error("Error fetching");
 
         const recipe = await res.json();
         currentRecipe = recipe;
 
-        // Título y meta
         document.title = recipe.name + " - NutriChef";
         document.getElementById("recipe-title").textContent = recipe.name;
-
-        // Subtítulo (categoría)
         if (recipe.category) {
-          document.getElementById("recipe-subtitle").textContent =
-            "Categoría: " + recipe.category;
+          document.getElementById("recipe-subtitle").textContent = "Categoría: " + recipe.category;
         }
 
-        // Ingredientes iniciales (por defecto: 1 porción de niño)
         renderIngredients();
 
-        // Pasos / método
+        // Render Steps
         const stepsContainer = document.getElementById("steps-list");
         stepsContainer.innerHTML = "";
         (recipe.method || []).forEach(function (step, index) {
           const div = document.createElement("div");
           div.className = "step-card";
 
-          const strong = document.createElement("strong");
-          strong.textContent = "Paso " + (index + 1) + ": ";
+          const number = document.createElement("div");
+          number.className = "step-number";
+          number.textContent = index + 1;
 
-          const text = document.createElement("span");
-          text.textContent = " " + step;
+          const content = document.createElement("div");
+          content.className = "step-content";
+          content.textContent = step;
 
-          div.appendChild(strong);
-          div.appendChild(text);
+          div.appendChild(number);
+          div.appendChild(content);
           stepsContainer.appendChild(div);
         });
 
-        return recipe;
       } catch (err) {
-        console.error("Unexpected error loading recipe:", err);
+        console.error(err);
         document.getElementById("recipe-title").textContent = "Error al cargar la receta";
-        return null;
       }
     }
 
