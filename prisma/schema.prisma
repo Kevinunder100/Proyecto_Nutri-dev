@@ -12,7 +12,8 @@ model User {
   email     String   @unique
   password  String
   name      String?
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
+  favorites Favorite[]
 }
 
 model Recipe {
@@ -38,6 +39,7 @@ model Recipe {
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  favorites       Favorite[]
 }
 
 model Ingredient {
@@ -50,4 +52,16 @@ model Ingredient {
   
   recipeId         String
   recipe           Recipe  @relation(fields: [recipeId], references: [id])
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  recipeId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  recipe Recipe @relation(fields: [recipeId], references: [id])
+
+  @@unique([userId, recipeId]) // Prevent duplicate favorites
 }

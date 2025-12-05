@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Mi Perfil - NutriChef</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+        .profile-header {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            margin-bottom: 40px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: #64748b;
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1f2933;
+            margin-bottom: 5px;
+        }
+
+        .profile-email {
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .favorites-section h2 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1f2933;
+            margin-bottom: 24px;
+            border-left: 5px solid #3fa34d;
+            padding-left: 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            background: white;
+            border-radius: 16px;
+            border: 1px dashed #cbd5e1;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <div class="container">
+            <div class="nav-logo">
+                <img src="img/logo.png">
+                <span>Nutri</span>
+            </div>
+
+            <nav class="nav-links">
+                <a href="index.html">Inicio</a>
+                <a href="menu.html">Recetas</a>
+                <a href="planes.html">Planes</a>
+                <a href="recursos.html">Recursos</a>
+            </nav>
+
+            <div class="nav-actions">
+                <!-- Auth handled by auth.js -->
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 40px; padding-bottom: 60px;">
+
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-avatar">👤</div>
+            <h1 class="profile-name" id="user-name">Cargando...</h1>
+            <p class="profile-email" id="user-email">...</p>
+            <button onclick="logout()" class="btn btn-outline" style="margin-top: 20px;">Cerrar Sesión</button>
+        </div>
+
+        <!-- Favorites Grid -->
+        <section class="favorites-section">
+            <h2>Mis Recetas Favoritas ❤️</h2>
+            <div id="favorites-grid" class="recipe-grid">
+                <!-- Recipes will be loaded here -->
+            </div>
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <h3>Aún no tienes favoritos</h3>
+                <p>Explora nuestro menú y guarda las recetas que más te gusten.</p>
+                <a href="menu.html" class="btn btn-primary" style="margin-top: 20px;">Explorar Recetas</a>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check auth
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Load Profile Data (Mock for now, or decode token if we had a /me endpoint)
+            // Ideally we should have a /api/auth/me endpoint. For now we might need to rely on stored data or fetch favorites which implies auth.
+            // Let's assume we can get basic info or just show "Usuario".
+            // Actually, let's fetch favorites and if 401, redirect.
+
+            loadFavorites();
+        });
+
+        async function loadFavorites() {
+            try {
+                const token = localStorage.getItem('token');
+
+                // 1. Fetch User Data
+                const userRes = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (userRes.status === 401) {
+                    logout();
+                    return;
+                }
+
+                const user = await userRes.json();
+                document.getElementById('user-name').textContent = user.name || "Usuario";
+                document.getElementById('user-email').textContent = user.email;
+
+                // Add "Member since" if available
+                if (user.createdAt) {
+                    const date = new Date(user.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' });
+                    const since = document.createElement('p');
+                    since.style.fontSize = '14px';
+                    since.style.color = '#9ca3af';
+                    since.style.marginTop = '5px';
+                    since.textContent = `Miembro desde ${date}`;
+                    document.querySelector('.profile-header').insertBefore(since, document.querySelector('.profile-header button'));
+                }
+
+                // 2. Fetch Favorites
+                const res = await fetch('/api/favorites', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const recipes = await res.json();
+
+                const grid = document.getElementById('favorites-grid');
+                const empty = document.getElementById('empty-state');
+
+                if (recipes.length === 0) {
+                    grid.style.display = 'none';
+                    empty.style.display = 'block';
+                } else {
+                    grid.style.display = 'grid';
+                    empty.style.display = 'none';
+
+                    grid.innerHTML = recipes.map(recipe => {
+                        // Logic for servings text
+                        let servingsText = "Porciones no especificadas";
+                        if (recipe.servingsChildren || recipe.servingsAdults) {
+                            servingsText = (recipe.servingsChildren ? recipe.servingsChildren + " niño(s)" : "") +
+                                (recipe.servingsChildren && recipe.servingsAdults ? " · " : "") +
+                                (recipe.servingsAdults ? recipe.servingsAdults + " adulto(s)" : "");
+                        }
+
+                        return `
+            <article class="recipe-card">
+              <h3>${recipe.name}</h3>
+              <p class="recipe-card-meta">${recipe.category || 'General'}</p>
+              <p class="recipe-card-servings">${servingsText}</p>
+              <a href="receta.html?slug=${recipe.slug}" class="btn btn-small">Ver receta</a>
+            </article>
+          `}).join('');
+                }
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -34,12 +34,18 @@
       <a href="#" class="back-button" onclick="goBack(event)">← Volver</a>
 
       <div class="recipe-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <!-- Título dinámico -->
-        <h1 id="recipe-title" style="margin: 0;">Cargando receta...</h1>
-        <!-- Puedes usar texto fijo o luego conectar esto a otra propiedad -->
-        <p id="recipe-subtitle">
-          Una receta nutritiva para disfrutar en familia.
-        </p>
+        <div>
+          <!-- Título dinámico -->
+          <h1 id="recipe-title" style="margin: 0;">Cargando receta...</h1>
+          <!-- Puedes usar texto fijo o luego conectar esto a otra propiedad -->
+          <p id="recipe-subtitle">
+            Una receta nutritiva para disfrutar en familia.
+          </p>
+        </div>
+        <button id="fav-btn" class="btn btn-outline"
+          style="display: none; border-radius: 50%; width: 50px; height: 50px; padding: 0; font-size: 24px;">
+          🤍
+        </button>
       </div>
 
       <div class="recipe-hero">
@@ -213,9 +219,11 @@
           stepsContainer.appendChild(div);
         });
 
+        return recipe;
       } catch (err) {
         console.error(err);
         document.getElementById("recipe-title").textContent = "Error al cargar la receta";
+        return null;
       }
     }
 
@@ -228,9 +236,64 @@
       }
     }
 
+    async function checkFavorite(recipeId) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const btn = document.getElementById('fav-btn');
+      btn.style.display = 'block'; // Show button if logged in
+
+      try {
+        const res = await fetch(`/api/favorites/${recipeId}/check`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        updateFavBtn(data.isFavorite);
+
+        btn.onclick = () => toggleFavorite(recipeId, data.isFavorite);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function updateFavBtn(isFav) {
+      const btn = document.getElementById('fav-btn');
+      btn.textContent = isFav ? '❤️' : '🤍';
+      btn.title = isFav ? 'Quitar de favoritos' : 'Agregar a favoritos';
+    }
+
+    async function toggleFavorite(recipeId, isFav) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const method = isFav ? 'DELETE' : 'POST';
+      const url = isFav ? `/api/favorites/${recipeId}` : '/api/favorites';
+      const body = isFav ? null : JSON.stringify({ recipeId });
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body
+        });
+
+        if (res.ok) {
+          // Re-check to update state correctly
+          checkFavorite(recipeId);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       setupPortionControls();
-      loadRecipe();
+      loadRecipe().then(recipe => {
+        if (recipe && recipe.id) checkFavorite(recipe.id);
+      });
     });
   </script>
   <script src="js/auth.js"></script>

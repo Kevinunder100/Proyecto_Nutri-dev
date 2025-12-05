@@ -33,4 +33,26 @@ export class AuthController {
             res.status(401).json({ error: error.message });
         }
     };
+
+    public getMe = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const userId = (req as any).user?.userId;
+            if (!userId) {
+                res.status(401).json({ error: "Unauthorized" });
+                return;
+            }
+
+            const user = await authService.getUserById(userId);
+            if (!user) {
+                res.status(404).json({ error: "User not found" });
+                return;
+            }
+
+            // Exclude password
+            const { password, ...userWithoutPassword } = user;
+            res.json(userWithoutPassword);
+        } catch (error: any) {
+            res.status(500).json({ error: "Internal server error" });
+        }
+    };
 }

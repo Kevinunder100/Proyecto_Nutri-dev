@@ -6,13 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (token) {
             // User is logged in
             navActions.innerHTML = `
-      <a href="#" class="btn btn-outline" id="logout-btn">Cerrar Sesión</a>
-    `;
-
-            document.getElementById('logout-btn').addEventListener('click', (e) => {
-                e.preventDefault();
-                logout();
-            });
+                <a href="perfil.html" class="btn btn-primary">Mi Perfil</a>
+            `;
         } else {
             // User is not logged in
             navActions.innerHTML = `

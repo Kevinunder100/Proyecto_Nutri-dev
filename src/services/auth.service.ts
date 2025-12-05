@@ -44,4 +44,10 @@ export class AuthService {
 
         return token;
     }
+
+    public async getUserById(userId: number): Promise<User | null> {
+        return prisma.user.findUnique({
+            where: { id: userId },
+        });
+    }
 }
